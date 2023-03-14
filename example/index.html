@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>example app for asyncDB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
+</head>
+
+<body>
+    <div id="app"></div>
+    <div class="row justify-center">
+        <div class="card fluid align-self-top">
+            <div class="section">
+                <form id="customerForm" onsubmit="addCustomer(event)">
+                    <fieldset>
+                        <legend>Add Customer</legend>
+                        <input type="text" id="name" name="name" />
+                        <button class="small primary" type="submit">Add</button>
+                    </fieldset>
+                </form>
+                <button class="small secondary" onclick="deleteDB(event)">
+                    Delete database
+                </button>
+                <button class="small tertiary" onclick="exportData(event)">
+                    Export database data
+                </button>
+            </div>
+        </div>
+        <div class="card large align-self-top">
+            <div class="section">
+                <table id="tblCustomers" class="striped">
+                    <caption>
+                        Customers
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./app.js"></script>
+</body>
+
+</html>

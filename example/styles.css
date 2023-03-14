@@ -1,0 +1,12 @@
+h1,
+h2 {
+    font-family: Lato;
+}
+
+.align-self-top {
+    align-self: start !important;
+}
+
+.justify-center {
+    justify-content: center;
+}
