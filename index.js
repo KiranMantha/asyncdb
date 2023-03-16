@@ -1,3 +1,8 @@
+export const DBTransactionStatus = {
+    SUCCESS: 'SUCCESS',
+    ERROR: 'ERROR',
+};
+
 function createGenerator(array) {
     function* gen() {
         yield* array;
@@ -6,13 +11,15 @@ function createGenerator(array) {
 }
 
 function promisify() {
-    let resolver, errorFn;
-
-    const promise = new Promise((resolve, reject) => {
+    let resolver;
+    const promise = new Promise((resolve) => {
         resolver = resolve;
-        errorFn = reject;
     });
-    return [promise, resolver, errorFn];
+    return [promise, resolver];
+}
+
+function generateResponse(status, data) {
+    return { status, data };
 }
 
 export class AsyncDB {
@@ -108,16 +115,21 @@ export class AsyncDB {
         const self = this;
         this.#dbName = dbname;
         this.#version = version;
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const request = this.#idb.open(dbname, version);
 
         request.onsuccess = (e) => {
             self.#db = e.target.result;
-            resolver(self.#db);
+            resolver(
+                generateResponse(
+                    DBTransactionStatus.SUCCESS,
+                    'Database setup successful'
+                )
+            );
         };
 
         request.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
 
         request.onupgradeneeded = (e) => {
@@ -128,14 +140,19 @@ export class AsyncDB {
             }
             const transaction = e.target.transaction;
             transaction.oncomplete = (e) => {
-                resolver(self.#db);
+                resolver(
+                    generateResponse(
+                        DBTransactionStatus.SUCCESS,
+                        'Database setup successful'
+                    )
+                );
             };
         };
         return promise;
     }
 
     getDataCursor(tableName, indexName, query = '', direction = 'next') {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const results = [];
         const transaction = this.#db.transaction([tableName], 'readonly');
         const objectStore = transaction.objectStore(tableName);
@@ -148,7 +165,7 @@ export class AsyncDB {
         }
 
         transaction.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
 
         request.onsuccess = (e) => {
@@ -158,82 +175,82 @@ export class AsyncDB {
                 value && results.push(value);
                 cursor.continue();
             } else {
-                resolver(results);
+                resolver(generateResponse(DBTransactionStatus.SUCCESS, results));
             }
         };
 
         request.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
 
     getAll(tableName) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const transaction = this.#db.transaction([tableName], 'readonly');
         const objectStore = transaction.objectStore(tableName);
         const request = objectStore.getAll();
 
         request.onsuccess = (e) => {
-            resolver(e.target.result);
+            resolver(generateResponse(DBTransactionStatus.SUCCESS, e.target.result));
         };
 
         request.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
 
     getAll(tableName, query) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const transaction = this.#db.transaction([tableName], 'readonly');
         const objectStore = transaction.objectStore(tableName);
         const request = objectStore.getAll(query);
 
         request.onsuccess = (e) => {
-            resolver(e.target.result);
+            resolver(generateResponse(DBTransactionStatus.SUCCESS, e.target.result));
         };
 
         request.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
 
     getAll(tableName, query, count) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const transaction = this.#db.transaction([tableName], 'readonly');
         const objectStore = transaction.objectStore(tableName);
         const request = objectStore.getAll(query, count);
 
         request.onsuccess = (e) => {
-            resolver(e.target.result);
+            resolver(generateResponse(DBTransactionStatus.SUCCESS, e.target.result));
         };
 
         request.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
 
     setData(tableName, data = []) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const transaction = this.#db.transaction([tableName], 'readwrite');
         const objStore = transaction.objectStore(tableName);
         const gen = createGenerator(data);
         this.#addRecord(objStore, gen);
 
         transaction.oncomplete = (e) => {
-            resolver();
+            resolver(generateResponse(DBTransactionStatus.SUCCESS));
         };
         transaction.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
 
     updateData(tableName, index, value) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const objStore = this.#db
             .transaction([tableName], 'readwrite')
             .objectStore(tableName);
@@ -242,29 +259,29 @@ export class AsyncDB {
             const data = objIndexReq.result;
             const newdata = Object.assign(data, value);
             const updateReq = objStore.put(data);
-            updateReq.onsuccess = (e) => {
-                resolver(true);
+            updateReq.onsuccess = () => {
+                resolver(generateResponse(DBTransactionStatus.SUCCESS, true));
             };
             updateReq.onerror = (e) => {
-                errorFn(e);
+                resolver(generateResponse(DBTransactionStatus.ERROR, e));
             };
         };
         objIndexReq.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
 
     deleteData(tableName, index) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const transaction = this.#db.transaction([tableName], 'readwrite');
         const objStore = transaction.objectStore(tableName);
         objStore.delete(index);
         transaction.oncomplete = (e) => {
-            resolver(true);
+            resolver(generateResponse(DBTransactionStatus.SUCCESS, true));
         };
         transaction.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }
@@ -275,16 +292,16 @@ export class AsyncDB {
     }
 
     bulkPut(tableName, data, key) {
-        const [promise, resolver, errorFn] = promisify();
+        const [promise, resolver] = promisify();
         const objStore = this.#db
             .transaction([tableName], 'readwrite')
             .objectStore(tableName);
         const request = key ? objStore.put(data, key) : objStore.put(data);
         request.onsuccess = (e) => {
-            resolver();
+            resolver(generateResponse(DBTransactionStatus.SUCCESS));
         };
         request.onerror = (e) => {
-            errorFn(e);
+            resolver(generateResponse(DBTransactionStatus.ERROR, e));
         };
         return promise;
     }

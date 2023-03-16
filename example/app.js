@@ -1,6 +1,7 @@
+//https://medium.com/@AndyHaskell2013/build-a-basic-web-app-with-indexeddb-8ab4f83f8bda
 // Import stylesheets
 import './style.css';
-import { AsyncDB } from './asyncdb';
+import { AsyncDB, DBTransactionStatus } from './asyncdb';
 import { exportToJsonString } from 'indexeddb-export-import';
 
 // Write Javascript code!
@@ -74,30 +75,39 @@ const tables = [
 
 const asyncDBInstance = new AsyncDB();
 
-asyncDBInstance.setup('CustomersDB', 1, tables).then((db) => {
-  showCustomers();
+asyncDBInstance.setup('CustomersDB', 1, tables).then((response) => {
+  if (response.status === DBTransactionStatus.SUCCESS) {
+    showCustomers();
+  }
 });
 
 function addCustomer(e) {
   e.preventDefault();
   let data = serializeArray(e.target);
-  asyncDBInstance.setData('customers', [data]).then((e) => {
-    customerinpt.value = '';
-    showCustomers();
+  asyncDBInstance.setData('customers', [data]).then((response) => {
+    if (response.status === DBTransactionStatus.SUCCESS) {
+      customerinpt.value = '';
+      showCustomers();
+    }
   });
 }
 
 function showCustomers() {
   tblCustomersBody.innerHTML = '';
-  asyncDBInstance.getAll('customers').then((data) => {
-    if (data.length > 0) {
-      data.forEach((item) => {
+  asyncDBInstance.getAll('customers').then((response) => {
+    if (
+      response.status === DBTransactionStatus.SUCCESS &&
+      response.data.length > 0
+    ) {
+      response.data.forEach((item) => {
         appendRecord(item.id, item.name);
       });
     }
   });
   asyncDBInstance.getDataCursor('customers', 'name').then((data) => {
-    console.log(data);
+    if (response.status === DBTransactionStatus.SUCCESS) {
+      console.log(response.data);
+    }
   });
 }
 
@@ -117,18 +127,24 @@ function updateCustomer(e) {
   if (e.which == 13) {
     let value = e.target.innerText;
     let id = parseInt(e.target.getAttribute('data-rid'));
-    asyncDBInstance.updateData('customers', id, { name: value }).then(() => {
-      console.log('customer updated');
-      showCustomers();
-    });
+    asyncDBInstance
+      .updateData('customers', id, { name: value })
+      .then((response) => {
+        if (response.status === DBTransactionStatus.SUCCESS) {
+          console.log('customer updated');
+          showCustomers();
+        }
+      });
   }
 }
 
 function removeCustomer(id) {
   console.log(id);
-  asyncDBInstance.deleteData('customers', id).then(() => {
-    console.log('customer deleted');
-    showCustomers();
+  asyncDBInstance.deleteData('customers', id).then((response) => {
+    if (response.status === DBTransactionStatus.SUCCESS) {
+      console.log('customer deleted');
+      showCustomers();
+    }
   });
 }
 
