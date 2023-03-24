@@ -1,0 +1,31 @@
+{
+  "name": "asyncdb",
+  "version": "1.0.0",
+  "description": "a promisified wrapper for indexedDB",
+  "files": [
+    "dist/**/*"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "terser index.js --output dist/index.js --compress --mangle --module"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KiranMantha/asyncdb.git"
+  },
+  "author": "KiranMantha",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KiranMantha/asyncdb/issues"
+  },
+  "homepage": "https://github.com/KiranMantha/asyncdb#readme",
+  "dependencies": {
+    "terser": "^5.16.6"
+  }
+}
