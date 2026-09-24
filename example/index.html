@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>example app for asyncDB</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
+    <link rel="stylesheet" href="./styles.css"/>
 </head>
 
 <body>
@@ -44,6 +45,19 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-center">
+        <div class="card fluid align-self-top">
+            <div class="section">
+                <fieldset>
+                    <legend>Notes (key/value store)</legend>
+                    <textarea id="notes" rows="4" placeholder="Type a note, it saves automatically..."></textarea>
+                    <button class="small secondary" onclick="clearNotes(event)">
+                        Clear note
+                    </button>
+                </fieldset>
             </div>
         </div>
     </div>

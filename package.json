@@ -7,13 +7,20 @@
   ],
   "main": "dist/index.js",
   "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "terser index.js --output dist/index.js --compress --mangle --module"
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -25,7 +32,9 @@
     "url": "https://github.com/KiranMantha/asyncdb/issues"
   },
   "homepage": "https://github.com/KiranMantha/asyncdb#readme",
-  "dependencies": {
-    "terser": "^5.16.6"
+  "devDependencies": {
+    "indexeddb-export-import": "^2.2.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   }
 }
